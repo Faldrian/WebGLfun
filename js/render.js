@@ -14,7 +14,8 @@ var scene = {
   mvMatrix: null,
 
   // scene variables
-  rotation: 0
+  rotation: 0,
+  numVertices: null
 
 };
 
@@ -105,11 +106,13 @@ function initBuffers() {
   // var vertices = [
     // 1.0,  1.0,  0.0,
     // -1.0, 1.0,  0.0,
-    // 1.0,  -1.0, 0.0,
-    // -1.0, -1.0, 0.0
+    // 1.0,  -1.0, 0.0
   // ];
 
   var vertices = torus.create(200, 0.35, 2, 5);
+
+
+  scene.numVertices = vertices.length; // for drawing...
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 }
@@ -144,7 +147,7 @@ function drawScene() {
   gl.vertexAttribPointer(scene.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
   // draw object
-  gl.drawArrays(gl.LINE_STRIP, 0, 201);
+  gl.drawArrays(gl.TRIANGLES, 0, scene.numVertices / 3);
 }
 
 function updateScene() {
