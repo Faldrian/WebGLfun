@@ -102,12 +102,14 @@ function initBuffers() {
   scene.squareVerticesBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, scene.squareVerticesBuffer);
 
-  var vertices = [
-    1.0,  1.0,  0.0,
-    -1.0, 1.0,  0.0,
-    1.0,  -1.0, 0.0,
-    -1.0, -1.0, 0.0
-  ];
+  // var vertices = [
+    // 1.0,  1.0,  0.0,
+    // -1.0, 1.0,  0.0,
+    // 1.0,  -1.0, 0.0,
+    // -1.0, -1.0, 0.0
+  // ];
+
+  var vertices = torus.create(200, 0.35, 2, 5);
 
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 }
@@ -142,11 +144,13 @@ function drawScene() {
   gl.vertexAttribPointer(scene.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
   // draw object
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  gl.drawArrays(gl.LINE_STRIP, 0, 201);
 }
 
 function updateScene() {
-  mat4.rotateZ(scene.mvMatrix, scene.mvMatrix, 0.05);
+  mat4.rotateX(scene.mvMatrix, scene.mvMatrix, 0.01);
+  mat4.rotateZ(scene.mvMatrix, scene.mvMatrix, 0.03);
+  mat4.rotateY(scene.mvMatrix, scene.mvMatrix, 0.02);
 }
 
 
