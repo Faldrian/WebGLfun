@@ -37,6 +37,15 @@ function resize() {
 
 function start() {
   canvas = document.getElementById("glcanvas");
+  canvas.addEventListener("click", function() {
+    if(canvas.requestFullScreen) {
+      canvas.requestFullScreen();
+    } else if(canvas.mozRequestFullScreen) {
+      canvas.mozRequestFullScreen();
+    } else if(canvas.webkitRequestFullScreen) {
+      canvas.webkitRequestFullScreen();
+    }
+  });
 
   initWebGL(canvas);
   // Initialisierung des WebGL Kontextes
@@ -222,4 +231,3 @@ function getShader(gl, id) {
 // let the fun begin!
 document.addEventListener("DOMContentLoaded", start);
 window.addEventListener("resize", resize);
-
