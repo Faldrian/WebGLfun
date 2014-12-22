@@ -91,7 +91,7 @@ var torus = {
 
   genAxialSystemFromSpline: function(segments, iPhi, p, q) {
     var phi = (iPhi / segments) * 2 * Math.PI;
-    var helpVector = vec3.fromValues(0, 0, 1);
+    var helpVector = vec3.fromValues(1, 1, 0);
 
     // get positions along the curve to get tangential vector on point
     var posBefore = this.torusCurve(p, q, phi - 0.01);
@@ -100,10 +100,11 @@ var torus = {
     // vectors for axial system
     var unitTangent = vec3.create();
     vec3.subtract(unitTangent, posBefore, posAfter);
+    vec3.normalize(unitTangent, unitTangent);
 
     var unitNormal = vec3.create();
     vec3.cross(unitNormal, unitTangent, helpVector);
-    vec3.normalize(unitTangent, unitTangent);
+    vec3.normalize(unitNormal, unitNormal);
 
     var unitBinormal = vec3.create();
     vec3.cross(unitBinormal, unitTangent, unitNormal);
