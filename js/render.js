@@ -20,13 +20,29 @@ var scene = {
 
 };
 
+/**
+ * Triggered on resize document
+ */
+function resize() {
+  canvas = document.getElementById('glcanvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // resize rendering area if gl is loaded
+  if(gl != null) {
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    initScene(canvas.width, canvas.height);
+  }
+}
+
 function start() {
   canvas = document.getElementById("glcanvas");
 
   initWebGL(canvas);
   // Initialisierung des WebGL Kontextes
 
-  // Es geht nur weiter, wenn WebGl verfügbar ist.
+  // adjust canvas size
+  resize();
 
   if (gl) {
     // Setzt die Farbe auf Schwarz, vollständig sichtbar
@@ -52,7 +68,7 @@ function start() {
     initBuffers();
 
     // Here we will set up additional scene data
-    initScene();
+    initScene(canvas.width, canvas.height);
 
     // Set up to draw the scene periodically.
 
@@ -111,8 +127,6 @@ function initBuffers() {
 
   scene.numVertices = vertices.length; // for drawing...
 
-
-
   var buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.vertexAttribPointer(scene.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
@@ -122,16 +136,16 @@ function initBuffers() {
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.vertexAttribPointer(scene.colorAttribute, 4, gl.FLOAT, false, 0, 0);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-}
-
-function initScene() {
-  // perspective
-  scene.perspectiveMatrix = mat4.create();
-  mat4.perspective(scene.perspectiveMatrix, 45, 640.0/480.0, 0.1, 100.0);
 
   // prepare object position
   scene.mvMatrix = mat4.create(); // init with identity
   mat4.translate(scene.mvMatrix, scene.mvMatrix, [-0.0, 0.0, -6.0]);
+}
+
+function initScene(width, height) {
+  // perspective
+  scene.perspectiveMatrix = mat4.create();
+  mat4.perspective(scene.perspectiveMatrix, 45, width / height, 0.1, 100.0);
 }
 
 
