@@ -31,6 +31,7 @@ function resize() {
   // resize rendering area if gl is loaded
   if(gl) {
     gl.viewport(0, 0, canvas.width, canvas.height);
+    initScene(canvas.width, canvas.height);
   }
 }
 
@@ -220,4 +221,5 @@ function getShader(gl, id) {
 
 // let the fun begin!
 document.addEventListener("DOMContentLoaded", start);
-window.addEventListener("resize", resize());
+window.addEventListener("resize", resize);
+
