@@ -15,6 +15,7 @@ var torus = {
     // DEBUG: Draw torus in line mode :)
 
     var vertices = [];
+    var colors = [];
 
     for(var iPhi = 0; iPhi <= segments; iPhi++) {
       // create new axial systems on spline
@@ -25,17 +26,18 @@ var torus = {
       for(var i = 0; i < this._numRingSegments; i++) {
 
         // create 4 vectors for a ringsegment (2 triangles building a quad)
-        var iGamma = (i / this._numRingSegments) * 2 * Math.PI;
-        var seg1a = this.genCircleVector(p0[2], p0[3], iGamma);
-        vec3.scale(this._ringScalingFactor, seg1a);
-        var seg2a = this.genCircleVector(p1[2], p1[3], iGamma);
-        vec3.scale(this._ringScalingFactor, seg2a);
+        var iGammaA = (i / this._numRingSegments) * 2 * Math.PI;
+        var seg1a = this.genCircleVector(p0[2], p0[3], iGammaA);
+        var seg2a = this.genCircleVector(p1[2], p1[3], iGammaA);
 
-        iGamma = ((i +1) / this._numRingSegments) * 2 * Math.PI;
-        var seg1b = this.genCircleVector(p0[2], p0[3], iGamma);  // code duplicate of above. Unrolling.
-        vec3.scale(this._ringScalingFactor, seg1a);
-        var seg2b = this.genCircleVector(p1[2], p1[3], iGamma);
-        vec3.scale(this._ringScalingFactor, seg2a);              // end duplicate
+        var iGammaB = ((i +1) / this._numRingSegments) * 2 * Math.PI;
+        var seg1b = this.genCircleVector(p0[2], p0[3], iGammaB);
+        var seg2b = this.genCircleVector(p1[2], p1[3], iGammaB);
+
+        vec3.scale(seg1a, seg1a, this._ringScalingFactor);
+        vec3.scale(seg1b, seg1b, this._ringScalingFactor);
+        vec3.scale(seg2a, seg2a, this._ringScalingFactor);
+        vec3.scale(seg2b, seg2b, this._ringScalingFactor);
 
         // create vertices
         var vseg1a = vec3.create(),
@@ -51,16 +53,32 @@ var torus = {
         // add triangles to vertex-list
         this.addFace(vertices, vseg1a, vseg2a, vseg1b);
         this.addFace(vertices, vseg1b, vseg2a, vseg2b);
+
+        // create colors
+        var col1a = vec4.fromValues(Math.sin(iGammaA), Math.cos(iGammaA), 0, 1);
+        var col1b = vec4.fromValues(Math.sin(iGammaB), Math.cos(iGammaB), 0, 1);
+        var col2a = vec4.fromValues(Math.sin(iGammaA), Math.cos(iGammaA), 0, 1);
+        var col2b = vec4.fromValues(Math.sin(iGammaB), Math.cos(iGammaB), 0, 1);
+
+        // add colors to colors list
+        this.addColor(colors, col1a, col2a, col1b);
+        this.addColor(colors, col1b, col2a, col2b);
       }
     }
 
-    return vertices;
+    return [vertices, colors];
   },
 
   addFace: function(out, a, b, c) {
     out.push(a[0], a[1], a[2],
              b[0], b[1], b[2],
              c[0], c[1], c[2]);
+  },
+
+  addColor: function(out, a, b, c) {
+    out.push(a[0], a[1], a[2], a[3],
+             b[0], b[1], b[2], b[3],
+             c[0], c[1], c[2], c[3]);
   },
 
   genCircleVector: function(vecx, vecy, gamma) {
@@ -73,7 +91,7 @@ var torus = {
 
   genAxialSystemFromSpline: function(segments, iPhi, p, q) {
     var phi = (iPhi / segments) * 2 * Math.PI;
-    var helpVector = vec3.fromValues(1, 1, 0);
+    var helpVector = vec3.fromValues(0, 0, 1);
 
     // get positions along the curve to get tangential vector on point
     var posBefore = this.torusCurve(p, q, phi - 0.01);

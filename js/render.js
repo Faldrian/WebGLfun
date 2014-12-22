@@ -5,6 +5,7 @@ var scene = {
   // shader
   shaderProgram : null,
   vertexPositionAttribute: null,
+  colorAttribute: null,
 
   // vertices
   squareVerticesBuffer: null,
@@ -93,28 +94,34 @@ function initShaders() {
   var vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
   gl.enableVertexAttribArray(vertexPositionAttribute);
 
+  var colorAttribute = gl.getAttribLocation(shaderProgram, "aColor");
+  gl.enableVertexAttribArray(colorAttribute);
+
   // Add shader to scene
   scene.shaderProgram = shaderProgram;
   scene.vertexPositionAttribute = vertexPositionAttribute;
+  scene.colorAttribute = colorAttribute;
 }
 
 
 function initBuffers() {
-  scene.squareVerticesBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, scene.squareVerticesBuffer);
-
-  // var vertices = [
-    // 1.0,  1.0,  0.0,
-    // -1.0, 1.0,  0.0,
-    // 1.0,  -1.0, 0.0
-  // ];
-
-  var vertices = torus.create(200, 0.35, 2, 5);
-
+  var torusArr = torus.create(200, 0.35, 2, 5);
+  var vertices = torusArr[0];
+  var colors = torusArr[1];
 
   scene.numVertices = vertices.length; // for drawing...
 
+
+
+  var buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.vertexAttribPointer(scene.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+  var buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.vertexAttribPointer(scene.colorAttribute, 4, gl.FLOAT, false, 0, 0);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 }
 
 function initScene() {
@@ -142,9 +149,7 @@ function drawScene() {
   var mvUniform = gl.getUniformLocation(scene.shaderProgram, "uMVMatrix");
   gl.uniformMatrix4fv(mvUniform, false, scene.mvMatrix);
 
-  // load object data
-  gl.bindBuffer(gl.ARRAY_BUFFER, scene.squareVerticesBuffer);
-  gl.vertexAttribPointer(scene.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
 
   // draw object
   gl.drawArrays(gl.TRIANGLES, 0, scene.numVertices / 3);
