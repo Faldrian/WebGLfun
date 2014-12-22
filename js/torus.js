@@ -121,5 +121,5 @@ var torus = {
       (Math.sin(q * phi))
     );
   }
-}
+};
 
