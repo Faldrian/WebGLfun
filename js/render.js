@@ -9,6 +9,9 @@ var scene = {
 
   // vertices
   squareVerticesBuffer: null,
+  
+  // textures
+  textureRust: null,
 
   // matrices for view and positions
   perspectiveMatrix: null,
@@ -75,6 +78,9 @@ function start() {
     // we'll be drawing.
 
     initBuffers();
+    
+    // Here we will load out textures
+    initTexture();
 
     // Here we will set up additional scene data
     initScene(canvas.width, canvas.height);
@@ -116,40 +122,81 @@ function initShaders() {
 
   gl.useProgram(shaderProgram);
 
-  var vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-  gl.enableVertexAttribArray(vertexPositionAttribute);
+  var aVertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+  gl.enableVertexAttribArray(aVertexPosition);
 
-  var colorAttribute = gl.getAttribLocation(shaderProgram, "aColor");
-  gl.enableVertexAttribArray(colorAttribute);
+  var aTextureCoord = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+  gl.enableVertexAttribArray(aTextureCoord);
+  
+  // var aNormal = gl.getAttribLocation(shaderProgram, "aNormal");
+  // gl.enableVertexAttribArray(aNormal);
+  
+  
+  // Save variable pointers
+  shaderProgram.aVertexPosition = aVertexPosition;
+  shaderProgram.aTextureCoord = aTextureCoord;
+  // shaderProgram.aNormal = aNormal;
+  
+  shaderProgram.pUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+  shaderProgram.mvUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+  shaderProgram.uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
+  
 
   // Add shader to scene
   scene.shaderProgram = shaderProgram;
-  scene.vertexPositionAttribute = vertexPositionAttribute;
-  scene.colorAttribute = colorAttribute;
 }
 
 
 function initBuffers() {
   var torusArr = torus.create(200, 0.35, 2, 5);
   var vertices = torusArr[0];
-  var colors = torusArr[1];
+  var texturecoordinates = torusArr[1];
+  var normals = torusArr[2];
 
   scene.numVertices = vertices.length; // for drawing...
 
   var buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.vertexAttribPointer(scene.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(scene.shaderProgram.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
   var buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.vertexAttribPointer(scene.colorAttribute, 4, gl.FLOAT, false, 0, 0);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+  gl.vertexAttribPointer(scene.shaderProgram.aTextureCoord, 2, gl.FLOAT, false, 0, 0);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texturecoordinates), gl.STATIC_DRAW);
+  
+  // var buffer = gl.createBuffer();
+  // gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  // gl.vertexAttribPointer(scene.shaderProgram.aNormal, 3, gl.FLOAT, false, 0, 0);
+  // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
   // prepare object position
   scene.mvMatrix = mat4.create(); // init with identity
   mat4.translate(scene.mvMatrix, scene.mvMatrix, [-0.0, 0.0, -6.0]);
 }
+
+function initTexture() {
+  scene.textureRust = loadTexture("img/rust.jpg");
+}
+
+function loadTexture(textureUrl) {
+  var tex = gl.createTexture();
+  tex.image = new Image();
+  tex.image.onload = function() {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tex.image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  };
+  
+  // start loading
+  tex.image.src = textureUrl;
+  
+  return tex;
+}
+
 
 function initScene(width, height) {
   // perspective
@@ -166,12 +213,13 @@ function drawScene() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   // load perspective- and MV-matrix
-  var pUniform = gl.getUniformLocation(scene.shaderProgram, "uPMatrix");
-  gl.uniformMatrix4fv(pUniform, false, scene.perspectiveMatrix);
-
-  var mvUniform = gl.getUniformLocation(scene.shaderProgram, "uMVMatrix");
-  gl.uniformMatrix4fv(mvUniform, false, scene.mvMatrix);
-
+  gl.uniformMatrix4fv(scene.shaderProgram.pUniform, false, scene.perspectiveMatrix);
+  gl.uniformMatrix4fv(scene.shaderProgram.mvUniform, false, scene.mvMatrix);
+  
+  // load texture
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, scene.textureRust);
+  gl.uniform1i(scene.shaderProgram.uSampler, 0); //textture0
 
 
   // draw object

@@ -15,7 +15,8 @@ var torus = {
     // DEBUG: Draw torus in line mode :)
 
     var vertices = [];
-    var colors = [];
+    var texturecoordinates = [];
+    var normals = [];
 
     for(var iPhi = 0; iPhi <= segments; iPhi++) {
       // create new axial systems on spline
@@ -50,35 +51,56 @@ var torus = {
         vec3.add(vseg1b, p0[0], seg1b);
         vec3.add(vseg2b, p1[0], seg2b);
 
-        // add triangles to vertex-list
-        this.addFace(vertices, vseg1a, vseg2a, vseg1b);
-        this.addFace(vertices, vseg1b, vseg2a, vseg2b);
-
-        // create colors
-        var col1a = vec4.fromValues(Math.sin(iGammaA), Math.cos(iGammaA), 0, 1);
-        var col1b = vec4.fromValues(Math.sin(iGammaB), Math.cos(iGammaB), 0, 1);
-        var col2a = vec4.fromValues(Math.sin(iGammaA), Math.cos(iGammaA), 0, 1);
-        var col2b = vec4.fromValues(Math.sin(iGammaB), Math.cos(iGammaB), 0, 1);
-
-        // add colors to colors list
-        this.addColor(colors, col1a, col2a, col1b);
-        this.addColor(colors, col1b, col2a, col2b);
+        // add triangles to list
+        this.pushVec3Triplet(vertices, vseg1a, vseg2a, vseg1b);
+        this.pushVec3Triplet(vertices, vseg1b, vseg2a, vseg2b);
+        
+        // texture coordinates
+        var y1 = (iPhi / 8) - Math.floor(iPhi / 8);
+        var y2 = (iPhi / 8) - Math.floor(iPhi / 8) + 0.125;
+        
+        var tex1a = vec2.fromValues(i/20, y1),
+  	        tex2a = vec2.fromValues(i/20, y2),
+  	        tex1b = vec2.fromValues((i+1)/20, y1),
+  	        tex2b = vec2.fromValues((i+1)/20, y2);
+	    
+  	    // add texture coodinates to list
+    		this.pushVec2Triplet(texturecoordinates, tex1a, tex2a, tex1b);
+    		this.pushVec2Triplet(texturecoordinates, tex1b, tex2a, tex2b);
+    		
+    		// add normals to list
+    		this.pushVec3Triplet(normals, seg1a, seg2a, seg1b);
+    		this.pushVec3Triplet(normals, seg1a, seg2a, seg1b);
       }
     }
 
-    return [vertices, colors];
+    return [vertices, texturecoordinates, normals];
   },
 
-  addFace: function(out, a, b, c) {
+/**
+ * push 3 vec3 on a linear array for use with webGL
+ * @param {array} out
+ * @param {vec3} a
+ * @param {vec3} b
+ * @param {vec3} c
+ */
+  pushVec3Triplet: function(out, a, b, c) {
     out.push(a[0], a[1], a[2],
              b[0], b[1], b[2],
              c[0], c[1], c[2]);
   },
 
-  addColor: function(out, a, b, c) {
-    out.push(a[0], a[1], a[2], a[3],
-             b[0], b[1], b[2], b[3],
-             c[0], c[1], c[2], c[3]);
+/**
+ * push 3 vec2 on a linear array for use with webGL
+ * @param {array} out
+ * @param {vec2} a
+ * @param {vec2} b
+ * @param {vec2} c
+ */
+  pushVec2Triplet: function(out, a, b, c) {
+    out.push(a[0], a[1],
+             b[0], b[1],
+             c[0], c[1]);
   },
 
   genCircleVector: function(vecx, vecy, gamma) {
