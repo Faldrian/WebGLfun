@@ -12,6 +12,11 @@ var scene = {
   
   // textures
   textureRust: null,
+  
+  // lights
+  lights: {
+    uLightSourcePosition0: vec3.fromValues(0,0,0)
+  },
 
   // matrices for view and positions
   perspectiveMatrix: null,
@@ -128,17 +133,21 @@ function initShaders() {
   var aTextureCoord = gl.getAttribLocation(shaderProgram, "aTextureCoord");
   gl.enableVertexAttribArray(aTextureCoord);
   
-  // var aNormal = gl.getAttribLocation(shaderProgram, "aNormal");
-  // gl.enableVertexAttribArray(aNormal);
+  var aNormal = gl.getAttribLocation(shaderProgram, "aNormal");
+  gl.enableVertexAttribArray(aNormal);
   
   
   // Save variable pointers
   shaderProgram.aVertexPosition = aVertexPosition;
   shaderProgram.aTextureCoord = aTextureCoord;
-  // shaderProgram.aNormal = aNormal;
+  shaderProgram.aNormal = aNormal;
   
-  shaderProgram.pUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-  shaderProgram.mvUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+  shaderProgram.uPMatrix = gl.getUniformLocation(shaderProgram, "uPMatrix");
+  shaderProgram.uMVMatrix = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+  shaderProgram.uNMatrix = gl.getUniformLocation(shaderProgram, "uNMatrix");
+  
+  shaderProgram.uLightSourcePosition0 = gl.getUniformLocation(shaderProgram, "uLightSourcePosition0");
+  
   shaderProgram.uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
   
 
@@ -165,14 +174,18 @@ function initBuffers() {
   gl.vertexAttribPointer(scene.shaderProgram.aTextureCoord, 2, gl.FLOAT, false, 0, 0);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texturecoordinates), gl.STATIC_DRAW);
   
-  // var buffer = gl.createBuffer();
-  // gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  // gl.vertexAttribPointer(scene.shaderProgram.aNormal, 3, gl.FLOAT, false, 0, 0);
-  // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+  var buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.vertexAttribPointer(scene.shaderProgram.aNormal, 3, gl.FLOAT, false, 0, 0);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
   // prepare object position
   scene.mvMatrix = mat4.create(); // init with identity
   mat4.translate(scene.mvMatrix, scene.mvMatrix, [-0.0, 0.0, -6.0]);
+  
+  // prepare normalmatrix
+  scene.normalMatrix = mat3.create();
+  mat3.normalFromMat4(scene.normalMatrix, scene.mvMatrix);
 }
 
 function initTexture() {
@@ -213,23 +226,30 @@ function drawScene() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   // load perspective- and MV-matrix
-  gl.uniformMatrix4fv(scene.shaderProgram.pUniform, false, scene.perspectiveMatrix);
-  gl.uniformMatrix4fv(scene.shaderProgram.mvUniform, false, scene.mvMatrix);
-  
+  gl.uniformMatrix4fv(scene.shaderProgram.uPMatrix, false, scene.perspectiveMatrix);
+  gl.uniformMatrix4fv(scene.shaderProgram.uMVMatrix, false, scene.mvMatrix);
+  gl.uniformMatrix3fv(scene.shaderProgram.uNMatrix, false, scene.normalMatrix);
+    
   // load texture
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, scene.textureRust);
   gl.uniform1i(scene.shaderProgram.uSampler, 0); //textture0
 
 
+  // load light
+  gl.uniform3fv(scene.shaderProgram.uLightSourcePosition0, scene.lights.uLightSourcePosition0);
+
   // draw object
   gl.drawArrays(gl.TRIANGLES, 0, scene.numVertices / 3);
 }
 
 function updateScene() {
-  mat4.rotateX(scene.mvMatrix, scene.mvMatrix, 0.01);
-  mat4.rotateZ(scene.mvMatrix, scene.mvMatrix, 0.03);
-  mat4.rotateY(scene.mvMatrix, scene.mvMatrix, 0.02);
+  mat4.rotateX(scene.mvMatrix, scene.mvMatrix, 0.001);
+  mat4.rotateZ(scene.mvMatrix, scene.mvMatrix, 0.003);
+  mat4.rotateY(scene.mvMatrix, scene.mvMatrix, 0.002);
+  
+  // create normalmatrix from mvmatrix
+  mat3.normalFromMat4(scene.normalMatrix, scene.mvMatrix);
 }
 
 

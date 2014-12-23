@@ -12,11 +12,37 @@
       precision mediump float;
 
       varying vec2 vTextureCoord;
+      varying vec3 vNormal;
+      varying vec3 vLightDir;
+      varying float vDist;
       
       uniform sampler2D uSampler;
 
       void main(void) {
-        gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        vec3 n;
+        float NdotL;
+        float att;
+        
+        vec4 color = vec4(0);
+        vec4 texcolor = texture2D(uSampler, vTextureCoord);
+        
+        /* a fragment shader can't write a varying variable, hence we need
+        a new variable to store the normalized interpolated normal */
+        n = normalize(vNormal);
+        
+        /* compute the dot product between normal and normalized lightdir */
+        NdotL = max(0.0, dot(n,normalize(vLightDir)));
+        
+        if (NdotL > 0.0) {
+          att = 1.0 / (
+            (0.2) +
+            (0.4 * vDist) +
+            (0.3 * vDist * vDist)
+          );
+          color = att * (texcolor * NdotL);
+        }
+       
+        gl_FragColor = color;
       }
     </script>
 
@@ -27,10 +53,28 @@
 
       uniform mat4 uMVMatrix;
       uniform mat4 uPMatrix;
+      uniform mat3 uNMatrix;
+      
+      uniform vec3 uLightSourcePosition0;
       
       varying vec2 vTextureCoord;
+      varying vec3 vNormal;
+      varying vec3 vLightDir;
+      varying float vDist;
 
       void main(void) {
+        vec3 ecNormal;
+        vec3 aux;
+        
+        /* Normale transformieren */
+        vNormal = normalize(uNMatrix * aNormal);
+        
+        /* these are the new lines of code to compute the light's direction */
+        ecNormal = uNMatrix * aVertexPosition;
+        aux = uLightSourcePosition0 - ecNormal;
+        vLightDir = normalize(aux);
+        vDist = length(aux);
+      
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
         vTextureCoord = aTextureCoord;
       }

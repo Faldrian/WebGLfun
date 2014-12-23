@@ -70,7 +70,7 @@ var torus = {
     		
     		// add normals to list
     		this.pushVec3Triplet(normals, seg1a, seg2a, seg1b);
-    		this.pushVec3Triplet(normals, seg1a, seg2a, seg1b);
+    		this.pushVec3Triplet(normals, seg1b, seg2a, seg2b);
       }
     }
 
