@@ -61,6 +61,8 @@
       
       uniform vec3 uLightSourcePosition0;
       
+      uniform vec3 uBumpPosition;
+      
       varying vec2 vTextureCoord;
       varying vec3 vNormal;
       varying vec3 vLightDir;
@@ -70,16 +72,26 @@
         vec3 ecNormal;
         vec3 aux;
         
-        /* Normale transformieren */
-        vNormal = normalize(uNMatrix * aNormal);
+        /* change position of vertex near the bump */
+        vec3 modVertexPosition = aVertexPosition;
+        float distToBump = distance(aVertexPosition, uBumpPosition);
+        if(distToBump < 0.5) {
+          modVertexPosition += aNormal * 0.7 * cos(distToBump*3.1416);
+          vNormal = normalize(aNormal + normalize(modVertexPosition - uBumpPosition)); 
+        } else {
+          vNormal = aNormal;
+        }
         
-        /* these are the new lines of code to compute the light's direction */
-        ecNormal = uNMatrix * aVertexPosition;
+        /* transfer Normale */
+        vNormal = normalize(uNMatrix * vNormal);
+        
+        /* these are the new lines of code to compute the lights direction */
+        ecNormal = uNMatrix * modVertexPosition;
         aux = uLightSourcePosition0 - ecNormal;
         vLightDir = normalize(aux);
         vDist = length(aux);
-      
-        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        
+        gl_Position = uPMatrix * uMVMatrix * vec4(modVertexPosition, 1.0);
         vTextureCoord = aTextureCoord;
       }
     </script>

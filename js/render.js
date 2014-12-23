@@ -24,7 +24,8 @@ var scene = {
 
   // scene variables
   rotation: 0,
-  numVertices: null
+  numVertices: null,
+  phi: 0
 
 };
 
@@ -147,6 +148,7 @@ function initShaders() {
   shaderProgram.uNMatrix = gl.getUniformLocation(shaderProgram, "uNMatrix");
   
   shaderProgram.uLightSourcePosition0 = gl.getUniformLocation(shaderProgram, "uLightSourcePosition0");
+  shaderProgram.uBumpPosition = gl.getUniformLocation(shaderProgram, "uBumpPosition");
   
   shaderProgram.uSamplerBase = gl.getUniformLocation(shaderProgram, "uSamplerBase");
   shaderProgram.uSamplerCracks = gl.getUniformLocation(shaderProgram, "uSamplerCracks");
@@ -217,6 +219,9 @@ function initScene(width, height) {
   // perspective
   scene.perspectiveMatrix = mat4.create();
   mat4.perspective(scene.perspectiveMatrix, 45, width / height, 0.1, 100.0);
+  
+  // bump to 0
+  scene.uBumpPosition = vec3.create();
 }
 
 
@@ -244,6 +249,10 @@ function drawScene() {
 
   // load light
   gl.uniform3fv(scene.shaderProgram.uLightSourcePosition0, scene.lights.uLightSourcePosition0);
+  
+  // supply bump position
+  gl.uniform3fv(scene.shaderProgram.uBumpPosition, scene.uBumpPosition);
+  
 
   // draw object
   gl.drawArrays(gl.TRIANGLES, 0, scene.numVertices / 3);
@@ -256,6 +265,9 @@ function updateScene() {
   
   // create normalmatrix from mvmatrix
   mat3.normalFromMat4(scene.normalMatrix, scene.mvMatrix);
+  
+  // move the bump
+  scene.uBumpPosition = torus.torusCurve(2, 5, scene.phi += 0.005);
 }
 
 
