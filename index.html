@@ -16,7 +16,8 @@
       varying vec3 vLightDir;
       varying float vDist;
       
-      uniform sampler2D uSampler;
+      uniform sampler2D uSamplerBase;
+      uniform sampler2D uSamplerCracks;
 
       void main(void) {
         vec3 n;
@@ -24,7 +25,8 @@
         float att;
         
         vec4 color = vec4(0);
-        vec4 texcolor = texture2D(uSampler, vTextureCoord);
+        vec4 texcolorBase = texture2D(uSamplerBase, vTextureCoord);
+        vec4 texcolorCracks = texture2D(uSamplerCracks, vTextureCoord);
         
         /* a fragment shader can't write a varying variable, hence we need
         a new variable to store the normalized interpolated normal */
@@ -35,12 +37,14 @@
         
         if (NdotL > 0.0) {
           att = 1.0 / (
-            (0.2) +
+            (0.5) +
             (0.4 * vDist) +
-            (0.3 * vDist * vDist)
+            (0.7 * vDist * vDist)
           );
-          color = att * (texcolor * NdotL);
+          color = att * (texcolorBase * NdotL);
         }
+        
+        color += texcolorCracks;
        
         gl_FragColor = color;
       }

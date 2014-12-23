@@ -148,7 +148,8 @@ function initShaders() {
   
   shaderProgram.uLightSourcePosition0 = gl.getUniformLocation(shaderProgram, "uLightSourcePosition0");
   
-  shaderProgram.uSampler = gl.getUniformLocation(shaderProgram, "uSampler");
+  shaderProgram.uSamplerBase = gl.getUniformLocation(shaderProgram, "uSamplerBase");
+  shaderProgram.uSamplerCracks = gl.getUniformLocation(shaderProgram, "uSamplerCracks");
   
 
   // Add shader to scene
@@ -190,6 +191,7 @@ function initBuffers() {
 
 function initTexture() {
   scene.textureRust = loadTexture("img/rust.jpg");
+  scene.textureCracks = loadTexture("img/cracks.jpg");
 }
 
 function loadTexture(textureUrl) {
@@ -199,8 +201,8 @@ function loadTexture(textureUrl) {
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tex.image);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.bindTexture(gl.TEXTURE_2D, null);
   };
   
@@ -233,7 +235,11 @@ function drawScene() {
   // load texture
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, scene.textureRust);
-  gl.uniform1i(scene.shaderProgram.uSampler, 0); //textture0
+  gl.uniform1i(scene.shaderProgram.uSamplerBase, 0); //textture0
+  
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, scene.textureCracks);
+  gl.uniform1i(scene.shaderProgram.uSamplerCracks, 1); //textture1
 
 
   // load light
