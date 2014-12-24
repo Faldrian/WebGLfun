@@ -1,17 +1,13 @@
 var gl = null; // WebGL context
 
-// Store scene-related data and handles
+// Store scene-related data and handles (will be filled further along initialisation)
 var scene = {
   // shader
   shaderProgram : null,
-  vertexPositionAttribute: null,
-  colorAttribute: null,
 
-  // vertices
-  squareVerticesBuffer: null,
-  
   // textures
   textureRust: null,
+  textureCracks: null,
   
   // lights
   lights: {
@@ -19,24 +15,17 @@ var scene = {
   },
 
   // matrices for view and positions
-  perspectiveMatrix: null,
-  mvMatrix: null,
+  perspectiveMatrix: mat4.create(), // init with identity,
+  translationMatrix: mat4.create(),
+  mvMatrix: mat4.create(),
+  normalMatrix: mat3.create(),
 
   // scene variables
+  rotation: 0,
+  uBumpPosition: vec3.create(),
   numVertices: null,
   bumpPhi: 0,
-  
-  flashCounter: 1,
-  flashColorIndex: 0,
-  flashColors: [
-    vec3.fromValues(1, 0, 0),
-    vec3.fromValues(0, 1, 0),
-    vec3.fromValues(0, 0, 1),
-    vec3.fromValues(1, 1, 0),
-    vec3.fromValues(1, 0, 1),
-    vec3.fromValues(0, 1, 1)
-  ]
-
+  flashActiveColor: vec4.fromValues(0.2, 1.0, 0.2, 1),
 };
 
 /**
@@ -73,26 +62,20 @@ function start() {
   resize();
 
   if (gl) {
-    // Setzt die Farbe auf Schwarz, vollständig sichtbar
+    // clear screen to solid black
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-
-    // Lösche alles, um die neue Farbe sichtbar zu machen
     gl.clearDepth(1.0);
 
-    // Aktiviere Tiefentest
+    // nearer objects overwrite distant objects
     gl.enable(gl.DEPTH_TEST);
-
-    // Nähere Objekte verdecken entferntere Objekte
     gl.depthFunc(gl.LEQUAL);
 
     // Initialize the shaders; this is where all the lighting for the
     // vertices and so forth is established.
-
     initShaders();
 
     // Here's where we call the routine that builds all the objects
     // we'll be drawing.
-
     initBuffers();
     
     // Here we will load out textures
@@ -102,7 +85,6 @@ function start() {
     initScene(canvas.width, canvas.height);
 
     // Set up to draw the scene periodically.
-
     setInterval(drawScene, 15);
   }
 }
@@ -114,9 +96,9 @@ function initWebGL() {
   } catch(e) {
   }
 
-  // Wenn wir keinen WebGl Kontext haben
+  // Complain about not having webGL context
   if (!gl) {
-    alert("WebGL konnte nicht initialisiert werden.");
+    alert("WebGL could not be initialized.");
   }
 }
 
@@ -147,7 +129,6 @@ function initShaders() {
   var aNormal = gl.getAttribLocation(shaderProgram, "aNormal");
   gl.enableVertexAttribArray(aNormal);
   
-  
   // Save variable pointers
   shaderProgram.aVertexPosition = aVertexPosition;
   shaderProgram.aTextureCoord = aTextureCoord;
@@ -163,7 +144,6 @@ function initShaders() {
   
   shaderProgram.uSamplerBase = gl.getUniformLocation(shaderProgram, "uSamplerBase");
   shaderProgram.uSamplerCracks = gl.getUniformLocation(shaderProgram, "uSamplerCracks");
-  
 
   // Add shader to scene
   scene.shaderProgram = shaderProgram;
@@ -192,14 +172,6 @@ function initBuffers() {
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.vertexAttribPointer(scene.shaderProgram.aNormal, 3, gl.FLOAT, false, 0, 0);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
-
-  // prepare object position
-  scene.mvMatrix = mat4.create(); // init with identity
-  mat4.translate(scene.mvMatrix, scene.mvMatrix, [-0.0, 0.0, -6.0]);
-  
-  // prepare normalmatrix
-  scene.normalMatrix = mat3.create();
-  mat3.normalFromMat4(scene.normalMatrix, scene.mvMatrix);
 }
 
 function initTexture() {
@@ -228,14 +200,28 @@ function loadTexture(textureUrl) {
 
 function initScene(width, height) {
   // perspective
-  scene.perspectiveMatrix = mat4.create();
   mat4.perspective(scene.perspectiveMatrix, 45, width / height, 0.1, 100.0);
   
-  // bump to 0
-  scene.uBumpPosition = vec3.create();
+  // create translation Matrix
+  scene.translationMatrix = mat4.create(); // so we start at identity again
+  mat4.translate(scene.translationMatrix, scene.translationMatrix, [-0.0, 0.6, -6.0]);
   
-  // calc the flash
-  calcFlash();
+  // do other stuff there, no duplicate code
+  updateScene();
+}
+
+
+function updateScene() {
+  // rotate scene
+  mat4.rotateX(scene.mvMatrix, scene.translationMatrix, - Math.PI / 4);
+  mat4.rotateZ(scene.mvMatrix, scene.mvMatrix, -0.002 * scene.rotation++);
+  
+  
+  // create normalmatrix from mvmatrix
+  mat3.normalFromMat4(scene.normalMatrix, scene.mvMatrix);
+  
+  // move the bump
+  scene.uBumpPosition = torus.torusCurve(2, 5, scene.bumpPhi += 0.01);
 }
 
 
@@ -275,34 +261,6 @@ function drawScene() {
   gl.drawArrays(gl.TRIANGLES, 0, scene.numVertices / 3);
 }
 
-function updateScene() {
-  mat4.rotateX(scene.mvMatrix, scene.mvMatrix, 0.001);
-  mat4.rotateZ(scene.mvMatrix, scene.mvMatrix, 0.003);
-  mat4.rotateY(scene.mvMatrix, scene.mvMatrix, 0.002);
-  
-  // create normalmatrix from mvmatrix
-  mat3.normalFromMat4(scene.normalMatrix, scene.mvMatrix);
-  
-  // move the bump
-  scene.uBumpPosition = torus.torusCurve(2, 5, scene.bumpPhi += 0.005);
-  
-  // calc the flash
-  calcFlash();
-}
-
-function calcFlash() {
-  if(++scene.flashCounter > 60) {
-    scene.flashCounter = 1;
-    scene.flashColorIndex = (scene.flashColorIndex +1) % scene.flashColors.length;
-  }
-  
-  var curColor = scene.flashColors[scene.flashColorIndex];
-  var x = scene.flashCounter;
-  var strength = 0.1 + 0.9 / x;
-  scene.flashActiveColor = vec4.fromValues(curColor[0], curColor[1], curColor[2], 1);
-  vec4.scale(scene.flashActiveColor, scene.flashActiveColor, strength);
-}
-
 function getShader(gl, id) {
   var shaderScript = document.getElementById(id);
 
@@ -328,17 +286,17 @@ function getShader(gl, id) {
   } else if (shaderScript.type == "x-shader/x-vertex") {
     shader = gl.createShader(gl.VERTEX_SHADER);
   } else {
-    return null;  // Unbekannter Shadertyp
+    return null;  // unknown shadertype
   }
 
   gl.shaderSource(shader, theSource);
 
-  // Kompiliere das Shaderprogramm
+  // compile the shader
   gl.compileShader(shader);
 
-  // Überprüfe, ob die Kompilierung erfolgreich war
+  // check if compilation was successful
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    alert("Es ist ein Fehler beim Kompilieren der Shader aufgetaucht: " + gl.getShaderInfoLog(shader));
+    alert("There was an error compiling the shader: " + gl.getShaderInfoLog(shader));
     return null;
   }
 

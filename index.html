@@ -15,6 +15,7 @@
       varying vec3 vNormal;
       varying vec3 vLightDir;
       varying float vDist;
+      varying float vDistToBump;
       
       uniform sampler2D uSamplerBase;
       uniform sampler2D uSamplerCracks;
@@ -46,7 +47,7 @@
           color = att * (texcolorBase * NdotL);
         }
         
-        color += uFlashColor * texcolorCracks;
+        color += vec4(max(0.1, 2.0 - (vDistToBump * vDistToBump * 4.0))) * uFlashColor * texcolorCracks;
        
         gl_FragColor = color;
       }
@@ -69,6 +70,7 @@
       varying vec3 vNormal;
       varying vec3 vLightDir;
       varying float vDist;
+      varying float vDistToBump;
 
       void main(void) {
         vec3 ecNormal;
@@ -76,9 +78,9 @@
         
         /* change position of vertex near the bump */
         vec3 modVertexPosition = aVertexPosition;
-        float distToBump = distance(aVertexPosition, uBumpPosition);
-        if(distToBump < 0.5) {
-          modVertexPosition += aNormal * 0.7 * cos(distToBump*3.1416);
+        vDistToBump = distance(aVertexPosition, uBumpPosition);
+        if(vDistToBump < 0.5) {
+          modVertexPosition += aNormal * 0.7 * cos(vDistToBump*3.1416);
           vNormal = normalize(aNormal + normalize(modVertexPosition - uBumpPosition)); 
         } else {
           vNormal = aNormal;
