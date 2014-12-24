@@ -103,6 +103,12 @@ var torus = {
              c[0], c[1]);
   },
 
+  /**
+   * create a vector pointing at one part of the drawn circle
+ * @param {vec3} vecx
+ * @param {vec3} vecy
+ * @param {float} gamma
+   */
   genCircleVector: function(vecx, vecy, gamma) {
     var x = vecx[0] * Math.cos(gamma) + vecy[0] * Math.sin(gamma);
     var y = vecx[1] * Math.cos(gamma) + vecy[1] * Math.sin(gamma);
@@ -111,6 +117,15 @@ var torus = {
     return vec3.fromValues(x,y,z);
   },
 
+  /**
+   * creates a frenet frame for tube-drawing
+ * @param {float} segments
+ *    Number of total segments in spline
+ * @param {float} iPhi
+ *    current segment to attach frame to
+ * @param {int} p
+ * @param {int} q
+   */
   genAxialSystemFromSpline: function(segments, iPhi, p, q) {
     var phi = (iPhi / segments) * 2 * Math.PI;
     var helpVector = vec3.fromValues(1, 1, 0);
@@ -136,6 +151,12 @@ var torus = {
     return [this.torusCurve(p, q, phi), unitTangent, unitNormal, unitBinormal];
   },
 
+  /**
+   * draws the torus curve
+ * @param {int} p
+ * @param {int} q
+ * @param {float} phi
+   */
   torusCurve: function(p, q, phi) {
     return vec3.fromValues(
       ((Math.cos(q * phi) + 2) * Math.cos(p * phi)),
