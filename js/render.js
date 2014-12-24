@@ -15,7 +15,7 @@ var scene = {
   
   // lights
   lights: {
-    uLightSourcePosition0: vec3.fromValues(0,0,0)
+    uLightSourcePosition0: vec3.fromValues(0, 0, 0)
   },
 
   // matrices for view and positions
@@ -23,9 +23,19 @@ var scene = {
   mvMatrix: null,
 
   // scene variables
-  rotation: 0,
   numVertices: null,
-  phi: 0
+  bumpPhi: 0,
+  
+  flashCounter: 1,
+  flashColorIndex: 0,
+  flashColors: [
+    vec3.fromValues(1, 0, 0),
+    vec3.fromValues(0, 1, 0),
+    vec3.fromValues(0, 0, 1),
+    vec3.fromValues(1, 1, 0),
+    vec3.fromValues(1, 0, 1),
+    vec3.fromValues(0, 1, 1)
+  ]
 
 };
 
@@ -149,6 +159,7 @@ function initShaders() {
   
   shaderProgram.uLightSourcePosition0 = gl.getUniformLocation(shaderProgram, "uLightSourcePosition0");
   shaderProgram.uBumpPosition = gl.getUniformLocation(shaderProgram, "uBumpPosition");
+  shaderProgram.uFlashColor = gl.getUniformLocation(shaderProgram, "uFlashColor");
   
   shaderProgram.uSamplerBase = gl.getUniformLocation(shaderProgram, "uSamplerBase");
   shaderProgram.uSamplerCracks = gl.getUniformLocation(shaderProgram, "uSamplerCracks");
@@ -222,6 +233,9 @@ function initScene(width, height) {
   
   // bump to 0
   scene.uBumpPosition = vec3.create();
+  
+  // calc the flash
+  calcFlash();
 }
 
 
@@ -253,6 +267,9 @@ function drawScene() {
   // supply bump position
   gl.uniform3fv(scene.shaderProgram.uBumpPosition, scene.uBumpPosition);
   
+  // set flash color
+  gl.uniform4fv(scene.shaderProgram.uFlashColor, scene.flashActiveColor);
+  
 
   // draw object
   gl.drawArrays(gl.TRIANGLES, 0, scene.numVertices / 3);
@@ -267,9 +284,24 @@ function updateScene() {
   mat3.normalFromMat4(scene.normalMatrix, scene.mvMatrix);
   
   // move the bump
-  scene.uBumpPosition = torus.torusCurve(2, 5, scene.phi += 0.005);
+  scene.uBumpPosition = torus.torusCurve(2, 5, scene.bumpPhi += 0.005);
+  
+  // calc the flash
+  calcFlash();
 }
 
+function calcFlash() {
+  if(++scene.flashCounter > 60) {
+    scene.flashCounter = 1;
+    scene.flashColorIndex = (scene.flashColorIndex +1) % scene.flashColors.length;
+  }
+  
+  var curColor = scene.flashColors[scene.flashColorIndex];
+  var x = scene.flashCounter;
+  var strength = 0.1 + 0.9 / x;
+  scene.flashActiveColor = vec4.fromValues(curColor[0], curColor[1], curColor[2], 1);
+  vec4.scale(scene.flashActiveColor, scene.flashActiveColor, strength);
+}
 
 function getShader(gl, id) {
   var shaderScript = document.getElementById(id);

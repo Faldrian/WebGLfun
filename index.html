@@ -18,6 +18,8 @@
       
       uniform sampler2D uSamplerBase;
       uniform sampler2D uSamplerCracks;
+      
+      uniform vec4 uFlashColor;
 
       void main(void) {
         vec3 n;
@@ -44,7 +46,7 @@
           color = att * (texcolorBase * NdotL);
         }
         
-        color += texcolorCracks;
+        color += uFlashColor * texcolorCracks;
        
         gl_FragColor = color;
       }
