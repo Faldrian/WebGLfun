@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WebGL Spielwiese</title>
+    <meta charset="utf-8">
+
+    <script src="js/particles.js"></script>
+    <script src="js/gl-matrix.js"></script>
+    <script src="js/render-particle.js"></script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+      precision mediump float;
+
+      varying vec2 v_texcoord;
+
+      void main(void) {
+        if(distance(v_texcoord, vec2(0.5, 0.5)) > 0.5) {
+          discard;
+        }
+
+        vec4 color = vec4(v_texcoord[0], v_texcoord[1], 1.0, 1.0);
+
+        gl_FragColor = color;
+      }
+    </script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      attribute vec2 aTextureCoord;
+      attribute vec3 aVertexPositionAlt;
+
+      uniform mat4 uMVMatrix;
+      uniform mat4 uPMatrix;
+      uniform mat3 uNMatrix;
+
+      uniform float uMorphTransition;
+
+      varying vec2 v_texcoord;
+
+      void main(void) {
+        v_texcoord = aTextureCoord.xy;
+
+        vec3 modVertexPosition = mix(aVertexPosition, aVertexPositionAlt, uMorphTransition);
+
+        gl_Position = uPMatrix * uMVMatrix * vec4(modVertexPosition, 1.0);
+      }
+    </script>
+
+    <link type="text/css" href="css/style.css" rel="stylesheet" media="all">
+  </head>
+  <body>
+    <canvas id="glcanvas" width="640" height="480">
+      too bad...
+    </canvas>
+  </body>
+</html>

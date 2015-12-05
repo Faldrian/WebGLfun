@@ -1,110 +1,19 @@
 <!doctype html>
 <html>
-  <head>
-    <title>WebGL Spielwiese</title>
-    <meta charset="utf-8">
 
-    <script src="js/torus.js"></script>
-    <script src="js/gl-matrix.js"></script>
-    <script src="js/render.js"></script>
+<head>
+  <title>WebGL Spielwiese</title>
+  <meta charset="utf-8">
+</head>
 
-    <script id="shader-fs" type="x-shader/x-fragment">
-      precision mediump float;
+<body>
+  <h1>Das gibts alles:</h1>
+  <ul>
+    <li>
+      <a href="torus.html">WebGL-Umsetzung eines Projekts im OpenGL-Java-Kurs der Uni</a>
+      <a href="particle.html">GPU-Partikel-Spielkram</a>
+    </li>
+  </ul>
+</body>
 
-      varying vec2 vTextureCoord;
-      varying vec3 vNormal;
-      varying vec3 vLightDir;
-      varying float vDist;
-      varying float vDistToBump;
-      
-      uniform sampler2D uSamplerBase;
-      uniform sampler2D uSamplerCracks;
-      
-      uniform vec4 uFlashColor;
-
-      void main(void) {
-        vec3 n;
-        float NdotL;
-        float att;
-        
-        vec4 color = vec4(0);
-        vec4 texcolorBase = texture2D(uSamplerBase, vTextureCoord);
-        vec4 texcolorCracks = texture2D(uSamplerCracks, vTextureCoord);
-        
-        /* a fragment shader can't write a varying variable, hence we need
-        a new variable to store the normalized interpolated normal */
-        n = normalize(vNormal);
-        
-        /* compute the dot product between normal and normalized lightdir */
-        NdotL = max(0.0, dot(n,normalize(vLightDir)));
-        
-        if (NdotL > 0.0) {
-          att = 1.0 / (
-            (0.5) +
-            (0.4 * vDist) +
-            (0.7 * vDist * vDist)
-          );
-          color = att * (texcolorBase * NdotL);
-        }
-        
-        color += vec4(max(0.1, 2.0 - (vDistToBump * vDistToBump * 4.0))) * uFlashColor * texcolorCracks;
-       
-        gl_FragColor = color;
-      }
-    </script>
-
-    <script id="shader-vs" type="x-shader/x-vertex">
-      attribute vec3 aVertexPosition;
-      attribute vec3 aNormal;
-      attribute vec2 aTextureCoord;
-
-      uniform mat4 uMVMatrix;
-      uniform mat4 uPMatrix;
-      uniform mat3 uNMatrix;
-      
-      uniform vec3 uLightSourcePosition0;
-      
-      uniform vec3 uBumpPosition;
-      
-      varying vec2 vTextureCoord;
-      varying vec3 vNormal;
-      varying vec3 vLightDir;
-      varying float vDist;
-      varying float vDistToBump;
-
-      void main(void) {
-        vec3 ecNormal;
-        vec3 aux;
-        
-        /* change position of vertex near the bump */
-        vec3 modVertexPosition = aVertexPosition;
-        vDistToBump = distance(aVertexPosition, uBumpPosition);
-        if(vDistToBump < 0.5) {
-          modVertexPosition += aNormal * 0.7 * cos(vDistToBump*3.1416);
-          vNormal = normalize(aNormal + normalize(modVertexPosition - uBumpPosition)); 
-        } else {
-          vNormal = aNormal;
-        }
-        
-        /* transfer Normale */
-        vNormal = normalize(uNMatrix * vNormal);
-        
-        /* these are the new lines of code to compute the lights direction */
-        ecNormal = uNMatrix * modVertexPosition;
-        aux = uLightSourcePosition0 - ecNormal;
-        vLightDir = normalize(aux);
-        vDist = length(aux);
-        
-        gl_Position = uPMatrix * uMVMatrix * vec4(modVertexPosition, 1.0);
-        vTextureCoord = aTextureCoord;
-      }
-    </script>
-    <link type="text/css" href="css/style.css" rel="stylesheet" media="all">
-  </head>
-  <body>
-    <canvas id="glcanvas" width="640" height="480">
-      too bad...
-    </canvas>
-  </body>
 </html>
-
