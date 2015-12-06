@@ -20,6 +20,8 @@ var scene = {
   mvMatrix: mat4.create(),
   normalMatrix: mat3.create(),
 
+  aspectRatio: 1,
+
   // scene variables
   morphState: 0,
   timer: 0.0
@@ -148,6 +150,7 @@ function initDrawShaders() {
 
   shaderProgram.uMorphTransition = gl.getUniformLocation(shaderProgram, "uMorphTransition");
   shaderProgram.uMorphTransition2 = gl.getUniformLocation(shaderProgram, "uMorphTransition2");
+  shaderProgram.uAspectRatio = gl.getUniformLocation(shaderProgram, "uAspectRatio");
 
 
   // Add shader to scene
@@ -218,7 +221,8 @@ function loadTexture(textureUrl) {
 
 function initScene(width, height) {
   // perspective
-  mat4.perspective(scene.perspectiveMatrix, 45, width / height, 0.1, 100.0);
+  scene.aspectRatio = width / height;
+  mat4.perspective(scene.perspectiveMatrix, 45, scene.aspectRatio, 0.1, 100.0);
 
   // create translation Matrix
   scene.translationMatrix = mat4.create(); // so we start at identity again
@@ -250,6 +254,8 @@ function drawScene(deltaT) {
 
   gl.uniform1f(scene.shaderProgram.uMorphTransition, scene.morphState);
   gl.uniform1f(scene.shaderProgram.uMorphTransition2, scene.morphState);
+
+  gl.uniform1f(scene.shaderProgram.uAspectRatio, scene.aspectRatio);
 
   // load texture
   // gl.activeTexture(gl.TEXTURE0);

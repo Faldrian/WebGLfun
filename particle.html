@@ -44,6 +44,7 @@
       uniform mat3 uNMatrix;
 
       uniform float uMorphTransition;
+      uniform float uAspectRatio;
 
       const float particleSize = 0.15;
 
@@ -62,9 +63,9 @@
           originPos.x += particleSize;
         }
         if(v_texcoord.y == 0.0) {
-          originPos.y -= particleSize;
+          originPos.y -= particleSize * uAspectRatio;
         } else {
-          originPos.y += particleSize;
+          originPos.y += particleSize * uAspectRatio;
         }
 
         gl_Position = originPos;
