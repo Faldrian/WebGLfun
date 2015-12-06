@@ -64,8 +64,12 @@ function start() {
     gl.clearDepth(1.0);
 
     // nearer objects overwrite distant objects
-    gl.enable(gl.DEPTH_TEST);
+    //gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
+
+    // alpha
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
     // Initialize the shaders; this is where all the lighting for the
     // vertices and so forth is established.
@@ -143,6 +147,7 @@ function initDrawShaders() {
   shaderProgram.uNMatrix = gl.getUniformLocation(shaderProgram, "uNMatrix");
 
   shaderProgram.uMorphTransition = gl.getUniformLocation(shaderProgram, "uMorphTransition");
+  shaderProgram.uMorphTransition2 = gl.getUniformLocation(shaderProgram, "uMorphTransition2");
 
 
   // Add shader to scene
@@ -244,6 +249,7 @@ function drawScene(deltaT) {
   gl.uniformMatrix3fv(scene.shaderProgram.uNMatrix, false, scene.normalMatrix);
 
   gl.uniform1f(scene.shaderProgram.uMorphTransition, scene.morphState);
+  gl.uniform1f(scene.shaderProgram.uMorphTransition2, scene.morphState);
 
   // load texture
   // gl.activeTexture(gl.TEXTURE0);

@@ -10,10 +10,17 @@ var particles = {
           z = point[2];
 
       // create vertices
-      var vseg1a = vec3.fromValues(x-particleSize/2, y-particleSize/2, z),
-          vseg2a = vec3.fromValues(x+particleSize/2, y-particleSize/2, z),
-          vseg1b = vec3.fromValues(x-particleSize/2, y+particleSize/2, z),
-          vseg2b = vec3.fromValues(x+particleSize/2, y+particleSize/2, z);
+      // var vseg1a = vec3.fromValues(x-particleSize/2, y-particleSize/2, z),
+      //     vseg2a = vec3.fromValues(x+particleSize/2, y-particleSize/2, z),
+      //     vseg1b = vec3.fromValues(x-particleSize/2, y+particleSize/2, z),
+      //     vseg2b = vec3.fromValues(x+particleSize/2, y+particleSize/2, z);
+
+      // the real offset will be done in the geometry shader
+      // we just need 4 vectors for now
+      var vseg1a = vec3.fromValues(x, y, z),
+          vseg2a = vec3.fromValues(x, y, z),
+          vseg1b = vec3.fromValues(x, y, z),
+          vseg2b = vec3.fromValues(x, y, z);
 
       // add triangles to list
       particles.pushVec3Triplet(vertices, vseg1a, vseg2a, vseg1b);
