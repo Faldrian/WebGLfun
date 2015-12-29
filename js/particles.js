@@ -111,6 +111,70 @@ var particles = {
     return points;
   },
 
+  pointSVG: function(pathpoints, width, origin) {
+    var points = [];
+
+    // extract coordinates from pathpoints
+    var pathsplit = pathpoints.split(" ");
+    var position = vec3.create();
+    var maxpoint = vec3.create();
+    var minpoint = vec3.create();
+    var sumpoint = vec3.create();
+    var pointtype = "";
+    for(var i=0; i<pathsplit.length;) {
+
+      if(pathsplit[i].length == 1) { // this is the type of thing that will follow
+        pointtype = pathsplit[i];
+        i++;
+
+      } else { // these show be coordinates
+        if(pointtype == "c") {
+          var coords = pathsplit[i+2].split(",");
+          var newPos = vec3.fromValues(parseFloat(coords[0]), 0, -parseFloat(coords[1]));
+          vec3.add(position, position, newPos);
+          i+=3;
+
+        } else if(pointtype == "l" || pointtype == "m") {
+          var coords = pathsplit[i].split(",");
+          var newPos = vec3.fromValues(parseFloat(coords[0]), 0, -parseFloat(coords[1]));
+          vec3.add(position, position, newPos);
+          i++;
+
+        } else if(pointtype == "M") {
+          var coords = pathsplit[i].split(",");
+          var newPos = vec3.fromValues(parseFloat(coords[0]), 0, -parseFloat(coords[1]));
+          position = newPos;
+          i++;
+
+        } else {
+          console.log("unexpected pointtype - abort");
+          break;
+        }
+
+        vec3.max(maxpoint, maxpoint, position);
+        vec3.min(minpoint, minpoint, position);
+        vec3.add(sumpoint, sumpoint, position);
+        points.push(vec3.clone(position));
+      }
+    }
+
+    // postprocessing: scale to fit width and reset origin
+    var meanpos = vec3.create();
+    vec3.scale(meanpos, sumpoint, 1 / points.length);
+    var movepos = vec3.create();
+    vec3.subtract(movepos, origin, meanpos);
+
+    var extent = vec3.distance(minpoint, maxpoint);
+    var scale = width / extent;
+
+    for(var i=0; i<points.length; i++) {
+      vec3.add(points[i], points[i], movepos);
+      vec3.scale(points[i], points[i], scale);
+    }
+
+    return points;
+  },
+
 /**
  * push 3 vec3 on a linear array for use with webGL
  * @param {array} out

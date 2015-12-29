@@ -22,7 +22,7 @@
         }
 
         float speed = 1.0 - sin(uMorphTransition2 * 3.1415);
-        float radius = (0.05 + 0.15 * speed);
+        float radius = (0.05 + 0.10 * speed);
 
         vec4 color = vec4(1.0);
         if(dist > radius) { // part of the glow
@@ -49,7 +49,7 @@
       uniform float uMorphTransition;
       uniform float uAspectRatio;
 
-      const float particleSize = 0.15;
+      const float particleSize = 0.10;
 
       varying vec2 v_texcoord;
 
